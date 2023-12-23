@@ -119,7 +119,6 @@ app.post('/login', async (req, res) => {
  *               user_id: "example_user"
  *               name: "John Doe"
  *               email: "john@example.com"
- *               // Include other user properties as needed
  *       401:
  *         description: Unauthorized. Token not valid.
  *       403:
@@ -415,7 +414,7 @@ app.post('/registervisitor', verifyToken, async (req, res)=>{
  *           type: string
  *       - in: query
  *         name: date
- *         description: Visit date of the visitor (format: YYYY-MM-DD)
+ *         description: Visit date of the visitor 
  *         schema:
  *           type: string
  *           format: date
@@ -514,7 +513,7 @@ app.get('/findvisitor', verifyToken, async (req, res)=>{
  *             visit_date:
  *               type: string
  *               format: date
- *               description: Updated visit date of the visitor (format: YYYY-MM-DD)
+ *               description: Updated visit date of the visitor 
  *               example: 2023-12-31
  *             unit:
  *               type: string
