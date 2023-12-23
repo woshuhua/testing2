@@ -25,9 +25,9 @@ const visitorLog = client.db("Visitor_Management_v1").collection("visitor_log")
 
 app.use(express.json())
 
-app.get('/', (req, res) => {
+/*app.get('/', (req, res) => {
    res.send('Hello World!')
-})
+})*/
 
 app.listen(port, () => {
    console.log(`Example app listening on port ${port}`)
