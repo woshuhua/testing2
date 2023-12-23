@@ -2,6 +2,8 @@ const express = require('express')
 const app = express()
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 3000;
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
@@ -35,6 +37,23 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
    console.log(`Example app listening on port ${port}`)
 })
+
+// Swagger setup
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0', // Specify the OpenAPI version
+    info: {
+      title: 'Your API',
+      version: '1.0.0',
+      description: 'API documentation using Swagger',
+    },
+  },
+  apis: ['./path-to-your-routes.js'], // Path to your route files
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 //login GET request
 app.post('/login', async (req, res) => {
