@@ -313,6 +313,43 @@ app.delete('/deleteuser', verifyToken, async (req, res)=>{
   }
 )
 
+/**
+ * @swagger
+ * /registervisitor:
+ *   post:
+ *     summary: Register a new visitor
+ *     description: Register a new visitor based on the provided data.
+ *     security:
+ *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:
+ *             ref: "visitor_reference_number"
+ *             name: "Visitor Name"
+ *             IC_num: "IC123456"
+ *             car_num: "ABC123"
+ *             hp_num: "+987654321"
+ *             pass: true
+ *             category: "Guest"
+ *             date: "2023-12-31"
+ *             unit: "A101"
+ *     responses:
+ *       200:
+ *         description: Successful response. Visitor registered successfully.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Registration request processed, visitor is Visitor Name"
+ *       400:
+ *         description: Bad Request. Visitor with the provided reference number already exists.
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
+
 //register visitor POST request
 app.post('/registervisitor', verifyToken, async (req, res)=>{
   let authorize = req.user.role
@@ -332,6 +369,91 @@ app.post('/registervisitor', verifyToken, async (req, res)=>{
   }
 )
 
+/**
+ * @swagger
+ * /findvisitor:
+ *   get:
+ *     summary: Find visitors based on criteria
+ *     description: Retrieve a list of visitors based on the provided criteria. Only residents can find their own visitors.
+ *     security:
+ *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
+ *     parameters:
+ *       - in: query
+ *         name: ref
+ *         description: Reference number of the visitor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: name
+ *         description: Name of the visitor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: IC_num
+ *         description: IC number of the visitor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: car_num
+ *         description: Car number of the visitor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: hp_num
+ *         description: Phone number of the visitor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: pass
+ *         description: Whether the visitor has a pass (true/false)
+ *         schema:
+ *           type: boolean
+ *       - in: query
+ *         name: category
+ *         description: Category of the visitor (e.g., Guest, Contractor)
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: date
+ *         description: Visit date of the visitor (format: YYYY-MM-DD)
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: unit
+ *         description: Unit of the visitor
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response. List of visitors matching the criteria.
+ *         content:
+ *           application/json:
+ *             example:
+ *               - ref_num: "visitor_reference_number"
+ *                 name: "Visitor Name"
+ *                 IC_num: "IC123456"
+ *                 car_num: "ABC123"
+ *                 hp_num: "+987654321"
+ *                 pass: true
+ *                 category: "Guest"
+ *                 visit_date: "2023-12-31"
+ *                 unit: "A101"
+ *               - ref_num: "another_reference_number"
+ *                 name: "Another Visitor"
+ *                 IC_num: "IC789012"
+ *                 car_num: "XYZ789"
+ *                 hp_num: "+123456789"
+ *                 pass: false
+ *                 category: "Contractor"
+ *                 visit_date: "2023-12-30"
+ *                 unit: "B202"
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
+
 //find visitor GET request
 app.get('/findvisitor', verifyToken, async (req, res)=>{
   let authorize = req.user//reading the token for authorisation
@@ -344,6 +466,80 @@ app.get('/findvisitor', verifyToken, async (req, res)=>{
     res.send(errorMessage() + "Not a valid token!") 
   }
   })
+
+/**
+ * @swagger
+ * /updatevisitor:
+ *   patch:
+ *     summary: Update visitor information
+ *     description: Update information of a visitor. Only residents and security can update their own visitors, while admin can update any visitor.
+ *     security:
+ *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
+ *     parameters:
+ *       - in: body
+ *         name: Visitor Update Information
+ *         description: JSON object containing the visitor information to be updated
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             ref_num:
+ *               type: string
+ *               description: Reference number of the visitor to be updated
+ *               example: visitor_reference_number
+ *             name:
+ *               type: string
+ *               description: Updated name of the visitor
+ *               example: Updated Visitor Name
+ *             IC_num:
+ *               type: string
+ *               description: Updated IC number of the visitor
+ *               example: IC654321
+ *             car_num:
+ *               type: string
+ *               description: Updated car number of the visitor
+ *               example: XYZ789
+ *             hp_num:
+ *               type: string
+ *               description: Updated phone number of the visitor
+ *               example: +987654321
+ *             pass:
+ *               type: boolean
+ *               description: Updated pass status of the visitor
+ *               example: true
+ *             category:
+ *               type: string
+ *               description: Updated category of the visitor (e.g., Guest, Contractor)
+ *               example: Contractor
+ *             visit_date:
+ *               type: string
+ *               format: date
+ *               description: Updated visit date of the visitor (format: YYYY-MM-DD)
+ *               example: 2023-12-31
+ *             unit:
+ *               type: string
+ *               description: Updated unit of the visitor
+ *               example: B303
+ *     responses:
+ *       200:
+ *         description: Successful response. Visitor information updated.
+ *         content:
+ *           application/json:
+ *             example:
+ *               ref_num: "visitor_reference_number"
+ *               name: "Updated Visitor Name"
+ *               IC_num: "IC654321"
+ *               car_num: "XYZ789"
+ *               hp_num: "+987654321"
+ *               pass: true
+ *               category: "Contractor"
+ *               visit_date: "2023-12-31"
+ *               unit: "B303"
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
 
 //update visitor PATCH request
 app.patch('/updatevisitor', verifyToken, async (req, res)=>{
@@ -361,6 +557,39 @@ app.patch('/updatevisitor', verifyToken, async (req, res)=>{
       res.send(errorMessage() + "Not a valid token!")
     }
 })
+
+/**
+ * @swagger
+ * /deletevisitor:
+ *   delete:
+ *     summary: Delete a visitor
+ *     description: Delete a visitor based on the reference number. Only residents and security can delete their own visitors, while admin can delete any visitor.
+ *     security:
+ *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
+ *     parameters:
+ *       - in: body
+ *         name: Visitor Deletion Information
+ *         description: JSON object containing the reference number of the visitor to be deleted
+ *         required: true
+ *         schema:
+ *           type: object
+ *           properties:
+ *             ref_num:
+ *               type: string
+ *               description: Reference number of the visitor to be deleted
+ *               example: visitor_reference_number
+ *     responses:
+ *       200:
+ *         description: Successful response. Visitor deleted.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "The visitor under reference number of visitor_reference_number has been deleted :D!"
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
 
 //delete visitor DELETE request
 app.delete('/deletevisitor', verifyToken, async (req, res)=>{
