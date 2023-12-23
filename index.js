@@ -55,6 +55,30 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Perform user login
+ *     description: Endpoint for user authentication
+ *     parameters:
+ *       - in: body
+ *         name: User Login Information
+ *         description: Username and Password
+ *         schema:
+ *           type: object
+ *           properties:
+ *             user_id:
+ *               type: string
+ *             password:
+ *               type: string
+ *     responses:
+ *       200:
+ *         description: OK
+ *       401:
+ *         description: Unauthorized
+ */
+
 //login GET request
 app.post('/login', async (req, res) => {
     let data = req.body
