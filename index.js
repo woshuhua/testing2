@@ -96,6 +96,40 @@ app.post('/login', async (req, res) => {
     }
   });
 
+/**
+ * @swagger
+ * /finduser:
+ *   get:
+ *     summary: Find user information
+ *     description: Retrieve user information based on the provided criteria.
+ *     security:
+ *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
+ *     parameters:
+ *       - in: query
+ *         name: user_id
+ *         schema:
+ *           type: string
+ *         description: The user_id of the user to find.
+ *     responses:
+ *       200:
+ *         description: Successful response. User information retrieved.
+ *         content:
+ *           application/json:
+ *             example:
+ *               user_id: "example_user"
+ *               name: "John Doe"
+ *               email: "john@example.com"
+ *               // Include other user properties as needed
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       403:
+ *         description: Forbidden. User does not have access to finding users.
+ *       404:
+ *         description: User not found. The specified user_id does not exist.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
+
 //find user GET request
 app.get('/finduser', verifyToken, async (req, res)=>{
   let authorize = req.user.role //reading the token for authorisation
@@ -115,6 +149,42 @@ app.get('/finduser', verifyToken, async (req, res)=>{
       res.send(errorMessage() + "Token not valid!")
     }
   })
+
+/**
+ * @swagger
+ * /registeruser:
+ *   post:
+ *     summary: Register a new user
+ *     description: Register a new user with the provided information.
+ *     security:
+ *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:
+ *             user_id: "new_user"
+ *             password: "password123"
+ *             name: "John Doe"
+ *             unit: "Apartment A"
+ *             hp_num: "+123456789"
+ *             role: "admin"
+ *     responses:
+ *       200:
+ *         description: Successful response. User registered successfully.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Registration request processed, new user is John Doe"
+ *       400:
+ *         description: Bad Request. User already exists.
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       403:
+ *         description: Forbidden. User does not have access to registering users.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
 
 //register user post request
 app.post('/registeruser', verifyToken, async (req, res)=>{
@@ -136,6 +206,42 @@ app.post('/registeruser', verifyToken, async (req, res)=>{
     }
   })
 
+/**
+ * @swagger
+ * /updateuser:
+ *   patch:
+ *     summary: Update user information
+ *     description: Update user information based on the provided data.
+ *     security:
+ *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:
+ *             user_id: "existing_user"
+ *             password: "new_password"
+ *             name: "Updated Name"
+ *             unit: "Updated Unit"
+ *             hp_num: "+987654321"
+ *             role: "admin"
+ *     responses:
+ *       200:
+ *         description: Successful response. User information updated successfully.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "User updated! Updated Name"
+ *       400:
+ *         description: Bad Request. User does not exist.
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       403:
+ *         description: Forbidden. User does not have access to update user information.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
+
 //update user PATCH request
 app.patch('/updateuser', verifyToken, async (req, res)=>{
   let authorize = req.user.role //reading the token for authorisation
@@ -154,6 +260,37 @@ app.patch('/updateuser', verifyToken, async (req, res)=>{
       res.send(errorMessage() + "Token is not found!")
     }
 })
+
+/**
+ * @swagger
+ * /deleteuser:
+ *   delete:
+ *     summary: Delete a user
+ *     description: Delete a user based on the provided user_id.
+ *     security:
+ *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:
+ *             user_id: "user_to_delete"
+ *     responses:
+ *       200:
+ *         description: Successful response. User deleted successfully.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "User deleted user_to_delete"
+ *       400:
+ *         description: Bad Request. Cannot find the user to delete.
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       403:
+ *         description: Forbidden. User does not have access to delete users.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
 
 //delete user DELETE request
 app.delete('/deleteuser', verifyToken, async (req, res)=>{
