@@ -64,6 +64,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  *     description: API operations related to user management
  *   - name: Visitor
  *     description: API operations related to visitor management
+ *   - name: Visitor Log
+ *     description: API operations related to visitor log management
  */
 
 /**
@@ -637,6 +639,55 @@ app.delete('/deletevisitor', verifyToken, async (req, res)=>{
   }
 )
 
+/**
+ * @swagger
+ * /createQRvisitor:
+ *   get:
+ *     tags:
+ *       - Visitor
+ *     summary: Create QR code for visitor
+ *     description: |
+ *       Create a QR code for a visitor based on their IC number.
+ *       The QR code contains visitor information such as reference number, name, category, and contact number.
+ *     parameters:
+ *       - in: body
+ *         name: Visitor Information
+ *         description: Visitor information for creating QR code
+ *         schema:
+ *           type: object
+ *           properties:
+ *             IC_num:
+ *               type: string
+ *               description: IC number of the visitor
+ *     responses:
+ *       200:
+ *         description: QR code created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                 qrCodeUrl:
+ *                   type: string
+ *                   format: uri
+ *                   description: URL to the generated QR code
+ *       400:
+ *         description: Invalid request or visitor not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *     security:
+ *       - bearerAuth: []
+ */
+
 //create a qr code for visitor
 app.get('/createQRvisitor', verifyToken, async (req, res)=>{
   let data = req.body
@@ -654,6 +705,57 @@ app.get('/createQRvisitor', verifyToken, async (req, res)=>{
     }
   }
 )
+
+/**
+ * @swagger
+ * /checkIn:
+ *   post:
+ *     tags:
+ *       - Visitor Log
+ *     summary: Create a visitor log
+ *     description: |
+ *       Create a visitor log for check-in. Only security and admin roles are allowed to create logs.
+ *     requestBody:
+ *       description: Visitor log information for check-in
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               log_id:
+ *                 type: string
+ *                 description: Unique log ID
+ *               ref:
+ *                 type: string
+ *                 description: Reference number of the visitor
+ *     responses:
+ *       200:
+ *         description: Visitor log created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                 logData:
+ *                   type: object
+ *                   description: Created visitor log data
+ *       400:
+ *         description: Invalid request or duplicate log ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *     security:
+ *       - bearerAuth: []
+ */
 
 //create a visitor log
 app.post('/checkIn', verifyToken, async (req, res,err)=>{
@@ -675,6 +777,67 @@ app.post('/checkIn', verifyToken, async (req, res,err)=>{
     }
   })
 
+/**
+ * @swagger
+ * /findvisitorlog:
+ *   get:
+ *     tags:
+ *       - Visitor Log
+ *     summary: Find visitor logs
+ *     description: |
+ *       Find visitor logs based on specified criteria. Only security and admin roles are allowed to find logs.
+ *     parameters:
+ *       - in: query
+ *         name: log_id
+ *         schema:
+ *           type: string
+ *         description: Optional. Log ID to filter logs.
+ *       - in: query
+ *         name: ref_num
+ *         schema:
+ *           type: string
+ *         description: Optional. Reference number of the visitor to filter logs.
+ *     responses:
+ *       200:
+ *         description: Visitor logs found successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   log_id:
+ *                     type: string
+ *                     description: Unique log ID
+ *                   ref_num:
+ *                     type: string
+ *                     description: Reference number of the visitor
+ *                   CheckIn_Time:
+ *                     type: string
+ *                     format: date-time
+ *                     description: Check-in time
+ *                   CheckOut_Time:
+ *                     type: string
+ *                     format: date-time
+ *                     description: Check-out time
+ *                   user_id:
+ *                     type: string
+ *                     description: User ID associated with the log
+ *       400:
+ *         description: Invalid request or insufficient permissions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *     security:
+ *       - bearerAuth: []
+ */
+
 //find visitor log
 app.get('/findvisitorlog', verifyToken, async (req, res)=>{
     let authorize = req.user.role //reading the token for authorisation
@@ -689,6 +852,44 @@ app.get('/findvisitorlog', verifyToken, async (req, res)=>{
     }
   }
   )
+
+/**
+ * @swagger
+ * /checkOut:
+ *   patch:
+ *     tags:
+ *       - Visitor Log
+ *     summary: Update a visitor log to checkout visitor
+ *     description: |
+ *       Update the specified visitor log to mark the visitor as checked out. Only security and admin roles are allowed to update logs.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               log_id:
+ *                 type: string
+ *                 description: Log ID of the visitor log to update
+ *             required:
+ *               - log_id
+ *     responses:
+ *       200:
+ *         description: Visitor log updated successfully
+ *       400:
+ *         description: Invalid request or insufficient permissions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *     security:
+ *       - bearerAuth: []
+ */
 
 //update a visitor log to checkout visitor
 app.patch('/checkOut', verifyToken, async (req, res)=>{
