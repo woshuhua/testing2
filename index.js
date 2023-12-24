@@ -914,6 +914,7 @@ async function login(data) {
   console.log("Alert! Alert! Someone is logging in!") //Display message to ensure function is called
   //Verify username is in the database
   let verify = await user.find({user_id : data.user_id}).next();
+  console.log(verify)
   if (verify){
     //verify password is correct
     const correctPassword = await bcrypt.compare(data.password,verify.password);
