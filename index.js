@@ -76,6 +76,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  *      - Alone Login
  *     summary: Perform user login
  *     description: Endpoint for user authentication
+ *     consumes:
+ *      - application/json
  *     parameters:
  *       - in: body
  *         name: User Login Information
@@ -97,6 +99,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 //login GET request
 app.post('/login', async (req, res) => {
     let data = req.body
+    console.log(req.body)
     let result = await login(data);
     const loginuser = result.verify
     const token = result.token
@@ -914,6 +917,7 @@ async function login(data) {
   console.log("Alert! Alert! Someone is logging in!") //Display message to ensure function is called
   //Verify username is in the database
   let verify = await user.find({user_id : data.user_id}).next();
+  console.log(data.user_id)
   console.log(verify)
   if (verify){
     //verify password is correct
