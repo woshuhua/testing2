@@ -5,6 +5,7 @@ const port = process.env.PORT || 3000;
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
+const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const qrCode_c = require('qrcode');
@@ -29,6 +30,8 @@ const visitor = client.db("Visitor_Management_v1").collection("visitors")
 const visitorLog = client.db("Visitor_Management_v1").collection("visitor_log")
 
 app.use(express.json())
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
    res.send('Hello World!')
