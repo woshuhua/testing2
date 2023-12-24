@@ -43,9 +43,9 @@ const swaggerOptions = {
   definition: {
     openapi: '3.0.0', // Specify the OpenAPI version
     info: {
-      title: 'Your API',
+      title: 'Visitor Management System Group 19',
       version: '1.0.0',
-      description: 'API documentation using Swagger',
+      description: 'Visitor Management System using Swagger and Node.js',
     },
   },
   apis: ['./index.js'], // Path to your route files
@@ -58,6 +58,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 /**
  * @swagger
  * tags:
+ *   - name: Alone Login
+ *     description: To analyze the identity of user
  *   - name: User
  *     description: API operations related to user management
  *   - name: Visitor
@@ -69,7 +71,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  * /login:
  *   post:
  *     tags:
- *      - User
+ *      - Alone Login
  *     summary: Perform user login
  *     description: Endpoint for user authentication
  *     parameters:
