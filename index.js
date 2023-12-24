@@ -101,7 +101,7 @@ app.post('/login', async (req, res) => {
     const loginuser = result.verify
     const token = result.token
     //check the returned result if its a object, only then can we welcome the user
-    if (typeof loginuser == "object") { 
+    if (result == true) { 
       res.write(loginuser.user_id + " has logged in!")
       res.write("\nWelcome "+ loginuser.name + "!")
       res.end("\nYour token : " + token)
