@@ -57,8 +57,19 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 /**
  * @swagger
+ * tags:
+ *   - name: User
+ *     description: API operations related to user management
+ *   - name: Visitor
+ *     description: API operations related to visitor management
+ */
+
+/**
+ * @swagger
  * /login:
  *   post:
+ *     tags:
+ *      - User
  *     summary: Perform user login
  *     description: Endpoint for user authentication
  *     parameters:
@@ -100,6 +111,8 @@ app.post('/login', async (req, res) => {
  * @swagger
  * /finduser:
  *   get:
+ *     tags:
+ *      - User
  *     summary: Find user information
  *     description: Retrieve user information based on the provided criteria.
  *     security:
@@ -153,6 +166,8 @@ app.get('/finduser', verifyToken, async (req, res)=>{
  * @swagger
  * /registeruser:
  *   post:
+ *     tags:
+ *      - User
  *     summary: Register a new user
  *     description: Register a new user with the provided information.
  *     security:
@@ -209,6 +224,8 @@ app.post('/registeruser', verifyToken, async (req, res)=>{
  * @swagger
  * /updateuser:
  *   patch:
+ *     tags:
+ *      - User
  *     summary: Update user information
  *     description: Update user information based on the provided data.
  *     security:
@@ -264,6 +281,8 @@ app.patch('/updateuser', verifyToken, async (req, res)=>{
  * @swagger
  * /deleteuser:
  *   delete:
+ *     tags:
+ *      - User
  *     summary: Delete a user
  *     description: Delete a user based on the provided user_id.
  *     security:
@@ -316,6 +335,8 @@ app.delete('/deleteuser', verifyToken, async (req, res)=>{
  * @swagger
  * /registervisitor:
  *   post:
+ *     tags:
+ *      - Visitor
  *     summary: Register a new visitor
  *     description: Register a new visitor based on the provided data.
  *     security:
@@ -372,6 +393,8 @@ app.post('/registervisitor', verifyToken, async (req, res)=>{
  * @swagger
  * /findvisitor:
  *   get:
+ *     tags:
+ *      - Visitor
  *     summary: Find visitors based on criteria
  *     description: Retrieve a list of visitors based on the provided criteria. Only residents can find their own visitors.
  *     security:
@@ -470,6 +493,8 @@ app.get('/findvisitor', verifyToken, async (req, res)=>{
  * @swagger
  * /updatevisitor:
  *   patch:
+ *     tags:
+ *      - Visitor
  *     summary: Update visitor information
  *     description: Update information of a visitor. Only residents and security can update their own visitors, while admin can update any visitor.
  *     security:
@@ -561,6 +586,8 @@ app.patch('/updatevisitor', verifyToken, async (req, res)=>{
  * @swagger
  * /deletevisitor:
  *   delete:
+ *     tags:
+ *       - Visitor
  *     summary: Delete a visitor
  *     description: Delete a visitor based on the reference number. Only residents and security can delete their own visitors, while admin can delete any visitor.
  *     security:
