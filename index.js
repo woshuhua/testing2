@@ -128,20 +128,21 @@ app.post('/login', async (req, res) => {
 
 /**
  * @swagger
- * /finduser:
+ * /finduser/{user_id}:
  *   get:
  *     tags:
  *      - User
  *     summary: Find user information
  *     description: Retrieve user information based on the provided criteria.
  *     security:
- *       - BearerAuth: []  
+ *       - BearerAuth: []
  *     parameters:
- *       - in: query
- *         name: user_id
- *         schema:
- *           type: string
- *         description: The user_id of the user to find.
+ *      - in: path  
+ *        name: user_id
+ *        schema:
+ *         type: string 
+ *        required: true
+ *        description: User ID of the user to be retrieved
  *     responses:
  *       200:
  *         description: Successful response. User information retrieved.
@@ -162,9 +163,11 @@ app.post('/login', async (req, res) => {
  */
 
 //find user GET request
-app.get('/finduser', verifyToken, async (req, res)=>{
+app.get('/finduser/:user_id', verifyToken, async (req, res)=>{
   let authorize = req.user.role //reading the token for authorisation
-  let data = req.body //requesting the data from body
+  let data = req.params //requesting the data from body
+  console.log(data)
+  console.log(authorize)
   //checking the role of user
   if (authorize == "resident"|| authorize == "security"){
     res.send(errorMessage() + "\nyou do not have access to finding users!")
