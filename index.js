@@ -79,19 +79,18 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  *      - Alone Login
  *     summary: Perform user login
  *     description: Endpoint for user authentication
- *     content:
- *      - application/json
- *     parameters:
- *       - in: body
- *         name: User Login Information
- *         description: Username and Password
+ *     requestBody:
+ *      description: User login information
+ *      required: true
+ *      content:
+ *        application/json:
  *         schema:
- *           type: object
- *           properties:
- *             user_id:
- *               type: string
- *             password:
- *               type: string
+ *          type: object
+ *          properties:
+ *            user_id:
+ *              type: string
+ *            password:
+ *              type: string
  *     responses:
  *       200:
  *         description: OK
