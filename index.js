@@ -50,6 +50,13 @@ const swaggerOptions = {
       version: '1.0.0',
       description: 'Visitor Management System using Swagger and Node.js',
     },
+    securityDefinitions: {
+      JWT: {
+        type: 'apiKey',
+        name: 'Authorization',
+        in: 'header',
+      },
+    },
   },
   apis: ['./index.js'], // Path to your route files
 };
@@ -57,6 +64,16 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ */
 
 /**
  * @swagger
@@ -98,7 +115,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  *         description: Unauthorized
  */
 
-//login GET request
+//login POST request
 app.post('/login', async (req, res) => {
     let data = req.body
     console.log(req.body)
