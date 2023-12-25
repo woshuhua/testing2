@@ -50,11 +50,13 @@ const swaggerOptions = {
       version: '1.0.0',
       description: 'Visitor Management System using Swagger and Node.js',
     },
-    securityDefinitions: {
-      JWT: {
-        type: 'apiKey',
-        name: 'Authorization',
-        in: 'header',
+    components:{
+      securitySchemes: {
+        BearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerformat: 'JWT',
+        },
       },
     },
   },
@@ -65,15 +67,6 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-/**
- * @swagger
- * components:
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- */
 
 /**
  * @swagger
@@ -142,7 +135,7 @@ app.post('/login', async (req, res) => {
  *     summary: Find user information
  *     description: Retrieve user information based on the provided criteria.
  *     security:
- *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
+ *       - BearerAuth: []  
  *     parameters:
  *       - in: query
  *         name: user_id
@@ -197,7 +190,7 @@ app.get('/finduser', verifyToken, async (req, res)=>{
  *     summary: Register a new user
  *     description: Register a new user with the provided information.
  *     security:
- *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
+ *       - BearerAuth: []  
  *     requestBody:
  *       required: true
  *       content:
@@ -255,7 +248,7 @@ app.post('/registeruser', verifyToken, async (req, res)=>{
  *     summary: Update user information
  *     description: Update user information based on the provided data.
  *     security:
- *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
+ *       - BearerAuth: []  
  *     requestBody:
  *       required: true
  *       content:
