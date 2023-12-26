@@ -290,7 +290,7 @@ app.patch('/updateuser', verifyToken, async (req, res)=>{
   }else if (authorize == "admin" ){
     const result = await updateUser(data)
     if (result){ // checking if the user exist and updated
-      res.send("User updated! " + result.value.name)
+      res.send("User updated! " + result.name)
     }else{
       res.send(errorMessage() + "User does not exist!")
     }
@@ -521,51 +521,51 @@ app.get('/findvisitor', verifyToken, async (req, res)=>{
  *     description: Update information of a visitor. Only residents and security can update their own visitors, while admin can update any visitor.
  *     security:
  *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
- *     parameters:
- *       - in: body
- *         name: Visitor Update Information
- *         description: JSON object containing the visitor information to be updated
- *         required: true
- *         schema:
- *           type: object
- *           properties:
- *             ref_num:
- *               type: string
- *               description: Reference number of the visitor to be updated
- *               example: visitor_reference_number
- *             name:
- *               type: string
- *               description: Updated name of the visitor
- *               example: Updated Visitor Name
- *             IC_num:
- *               type: string
- *               description: Updated IC number of the visitor
- *               example: IC654321
- *             car_num:
- *               type: string
- *               description: Updated car number of the visitor
- *               example: XYZ789
- *             hp_num:
- *               type: string
- *               description: Updated phone number of the visitor
- *               example: +987654321
- *             pass:
- *               type: boolean
- *               description: Updated pass status of the visitor
- *               example: true
- *             category:
- *               type: string
- *               description: Updated category of the visitor (e.g., Guest, Contractor)
- *               example: Contractor
- *             visit_date:
- *               type: string
- *               format: date
- *               description: Updated visit date of the visitor 
- *               example: 2023-12-31
- *             unit:
- *               type: string
- *               description: Updated unit of the visitor
- *               example: B303
+ *     requestBody:
+ *       description: JSON object containing the visitor information to be updated
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               ref_num:
+ *                 type: string
+ *                 description: Reference number of the visitor to be updated
+ *                 example: visitor_reference_number
+ *               name:
+ *                 type: string
+ *                 description: Updated name of the visitor
+ *                 example: Updated Visitor Name
+ *               IC_num:
+ *                 type: string
+ *                 description: Updated IC number of the visitor
+ *                 example: IC654321
+ *               car_num:
+ *                 type: string
+ *                 description: Updated car number of the visitor
+ *                 example: XYZ789
+ *               hp_num:
+ *                 type: string
+ *                 description: Updated phone number of the visitor
+ *                 example: +987654321
+ *               pass:
+ *                 type: boolean
+ *                 description: Updated pass status of the visitor
+ *                 example: true
+ *               category:
+ *                 type: string
+ *                 description: Updated category of the visitor (e.g., Guest, Contractor)
+ *                 example: Contractor
+ *               visit_date:
+ *                 type: string
+ *                 format: date
+ *                 description: Updated visit date of the visitor 
+ *                 example: 2023-12-31
+ *               unit:
+ *                 type: string
+ *                 description: Updated unit of the visitor
+ *                 example: B303
  *     responses:
  *       200:
  *         description: Successful response. Visitor information updated.
@@ -595,7 +595,7 @@ app.patch('/updatevisitor', verifyToken, async (req, res)=>{
   if(authorize.role){
     const result = await updateVisitor(data,authorize) // update visitor
     if (result){
-      res.send("Visitor " + result.value.user_id + " has been updated :D!")
+      res.send("Visitor " + result.name + " has been updated :D!")
     }else{
       res.send(errorMessage() + "Visitor does not exist!")
     }
@@ -979,8 +979,10 @@ async function updateUser(data) {
   if (data.password){
   data.password = await encryption(data.password) //encrypt the password
   }
+  result1 = await user.findOne({user_id : data.user_id})
+  console.log(result1)
   result = await user.findOneAndUpdate({user_id : data.user_id},{$set : data}, {new: true})
-  if(result.value == null){ //check if user exist
+  if(result == null){ //check if user exist
     return 
   }else{
     return (result)
@@ -1036,7 +1038,7 @@ async function updateVisitor(data, currentUser) {
   }else if (currentUser.role == "admin"){
     result = await visitor.findOneAndUpdate({"ref_num": data.ref_num},{$set : data}, {new:true}) //allow admin to update all visitors
   }
-  if(result.value == null){ //check if visitor exist
+  if(result == null){ //check if visitor exist
     return 
   }else{
     return (result)
