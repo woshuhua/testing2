@@ -550,7 +550,7 @@ app.get('/findvisitor', verifyToken, async (req, res)=>{
  *                 description: Updated phone number of the visitor
  *                 example: +987654321
  *               pass:
- *                 type: boolean
+ *                 type: string
  *                 description: Updated pass status of the visitor
  *                 example: true
  *               category:
@@ -614,18 +614,17 @@ app.patch('/updatevisitor', verifyToken, async (req, res)=>{
  *     description: Delete a visitor based on the reference number. Only residents and security can delete their own visitors, while admin can delete any visitor.
  *     security:
  *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
- *     parameters:
- *       - in: body
- *         name: Visitor Deletion Information
- *         description: JSON object containing the reference number of the visitor to be deleted
- *         required: true
- *         schema:
- *           type: object
- *           properties:
- *             ref_num:
- *               type: string
- *               description: Reference number of the visitor to be deleted
- *               example: visitor_reference_number
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               ref_num:
+ *                 type: string
+ *                 description: Reference number of the visitor to be deleted
+ *                 example: visitor_reference_number
  *     responses:
  *       200:
  *         description: Successful response. Visitor deleted.
@@ -639,10 +638,13 @@ app.patch('/updatevisitor', verifyToken, async (req, res)=>{
  *         description: Internal Server Error. Something went wrong on the server.
  */
 
+
 //delete visitor DELETE request
 app.delete('/deletevisitor', verifyToken, async (req, res)=>{
   let data = req.body
   let authorize = req.user
+  console.log(data)
+  console.log(authorize)
   //checking if token is valid
   if(authorize.role){
   const deletedV = await deleteVisitor(data,authorize) //delete visitor
