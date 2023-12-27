@@ -565,7 +565,7 @@ app.patch('/updatevisitor', verifyToken, async (req, res)=>{
  *     summary: Delete a visitor
  *     description: Delete a visitor based on the reference number. Only residents and security can delete their own visitors, while admin can delete any visitor.
  *     security:
- *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
+ *       - BearerAuth: []  
  *     requestBody:
  *       required: true
  *       content:
@@ -613,7 +613,7 @@ app.delete('/deletevisitor', verifyToken, async (req, res)=>{
 
 /**
  * @swagger
- * /createQRvisitor:
+ * /createQRvisitor/{IC_num}:
  *   get:
  *     tags:
  *       - Visitor
@@ -621,16 +621,15 @@ app.delete('/deletevisitor', verifyToken, async (req, res)=>{
  *     description: |
  *       Create a QR code for a visitor based on their IC number.
  *       The QR code contains visitor information such as reference number, name, category, and contact number.
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
- *       - in: body
- *         name: Visitor Information
- *         description: Visitor information for creating QR code
+ *       - in: path
+ *         name: IC_num
+ *         description: IC Number of the visitor
  *         schema:
- *           type: object
- *           properties:
- *             IC_num:
- *               type: string
- *               description: IC number of the visitor
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
  *         description: QR code created successfully
@@ -656,14 +655,13 @@ app.delete('/deletevisitor', verifyToken, async (req, res)=>{
  *                 error:
  *                   type: string
  *                   description: Error message
- *     security:
- *       - bearerAuth: []
  */
 
 //create a qr code for visitor
-app.get('/createQRvisitor', verifyToken, async (req, res)=>{
-  let data = req.body
+app.get('/createQRvisitor/:IC_num', verifyToken, async (req, res)=>{
+  let data = req.params
   let authorize = req.user
+  console.log(data)
   if (authorize.role){ //checking if token is valid
   const uri = await qrCreate(data) //create qr code
     if (uri){
