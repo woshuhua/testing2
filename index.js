@@ -413,64 +413,24 @@ app.post('/registervisitor', verifyToken, async (req, res)=>{
 
 /**
  * @swagger
- * /findvisitor:
+ * /findvisitor/{ref_num}:
  *   get:
  *     tags:
  *      - Visitor
- *     summary: Find visitors based on criteria
- *     description: Retrieve a list of visitors based on the provided criteria. Only residents can find their own visitors.
+ *     summary: Find visitors based on reference number
+ *     description: Retrieve a list of visitors based on the reference number. Only residents can find their own visitors.
  *     security:
  *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
  *     parameters:
- *       - in: query
- *         name: ref
+ *       - in: path
+ *         name: ref_num
  *         description: Reference number of the visitor
  *         schema:
  *           type: string
- *       - in: query
- *         name: name
- *         description: Name of the visitor
- *         schema:
- *           type: string
- *       - in: query
- *         name: IC_num
- *         description: IC number of the visitor
- *         schema:
- *           type: string
- *       - in: query
- *         name: car_num
- *         description: Car number of the visitor
- *         schema:
- *           type: string
- *       - in: query
- *         name: hp_num
- *         description: Phone number of the visitor
- *         schema:
- *           type: string
- *       - in: query
- *         name: pass
- *         description: Whether the visitor has a pass (true/false)
- *         schema:
- *           type: boolean
- *       - in: query
- *         name: category
- *         description: Category of the visitor (e.g., Guest, Contractor)
- *         schema:
- *           type: string
- *       - in: query
- *         name: date
- *         description: Visit date of the visitor 
- *         schema:
- *           type: string
- *           format: date
- *       - in: query
- *         name: unit
- *         description: Unit of the visitor
- *         schema:
- *           type: string
+ *         required: true
  *     responses:
  *       200:
- *         description: Successful response. List of visitors matching the criteria.
+ *         description: Successful response. List of visitors matching the reference number.
  *         content:
  *           application/json:
  *             example:
@@ -479,19 +439,10 @@ app.post('/registervisitor', verifyToken, async (req, res)=>{
  *                 IC_num: "IC123456"
  *                 car_num: "ABC123"
  *                 hp_num: "+987654321"
- *                 pass: true
+ *                 pass: "example_pass"
  *                 category: "Guest"
  *                 visit_date: "2023-12-31"
  *                 unit: "A101"
- *               - ref_num: "another_reference_number"
- *                 name: "Another Visitor"
- *                 IC_num: "IC789012"
- *                 car_num: "XYZ789"
- *                 hp_num: "+123456789"
- *                 pass: false
- *                 category: "Contractor"
- *                 visit_date: "2023-12-30"
- *                 unit: "B202"
  *       401:
  *         description: Unauthorized. Token not valid.
  *       500:
@@ -499,9 +450,10 @@ app.post('/registervisitor', verifyToken, async (req, res)=>{
  */
 
 //find visitor GET request
-app.get('/findvisitor', verifyToken, async (req, res)=>{
+app.get('/findvisitor/:ref_num', verifyToken, async (req, res)=>{
   let authorize = req.user//reading the token for authorisation
-  let data = req.body //requesting the data from body
+  let data = req.params //requesting the data from body
+  console.log(data)
   //checking the role of user
   if (authorize.role){
     const result = await findVisitor(data,authorize) //find visitor
