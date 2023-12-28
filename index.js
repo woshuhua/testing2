@@ -724,7 +724,7 @@ app.get('/createQRvisitor/:IC_num', verifyToken, async (req, res)=>{
  *                   type: string
  *                   description: Error message
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  */
 
 //create a visitor log
@@ -749,7 +749,7 @@ app.post('/checkIn', verifyToken, async (req, res,err)=>{
 
 /**
  * @swagger
- * /findvisitorlog:
+ * /findvisitorlog/{log_id}:
  *   get:
  *     tags:
  *       - Visitor Log
@@ -757,16 +757,11 @@ app.post('/checkIn', verifyToken, async (req, res,err)=>{
  *     description: |
  *       Find visitor logs based on specified criteria. Only security and admin roles are allowed to find logs.
  *     parameters:
- *       - in: query
+ *       - in: path
  *         name: log_id
  *         schema:
  *           type: string
- *         description: Optional. Log ID to filter logs.
- *       - in: query
- *         name: ref_num
- *         schema:
- *           type: string
- *         description: Optional. Reference number of the visitor to filter logs.
+ *         description: Log ID of the visitor log to find
  *     responses:
  *       200:
  *         description: Visitor logs found successfully
@@ -805,13 +800,13 @@ app.post('/checkIn', verifyToken, async (req, res,err)=>{
  *                   type: string
  *                   description: Error message
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  */
 
 //find visitor log
-app.get('/findvisitorlog', verifyToken, async (req, res)=>{
+app.get('/findvisitorlog/:log_id', verifyToken, async (req, res)=>{
     let authorize = req.user.role //reading the token for authorisation
-    let data = req.body //requesting the data from body
+    let data = req.params //requesting the data from body
     //checking the role of user
     if (authorize == "resident"){
       res.send(errorMessage() + "you do not have access to registering users!")
@@ -858,7 +853,7 @@ app.get('/findvisitorlog', verifyToken, async (req, res)=>{
  *                   type: string
  *                   description: Error message
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  */
 
 //update a visitor log to checkout visitor
@@ -1030,10 +1025,11 @@ async function updateLog(newdata) {
   //verify if username is already in databse
   let dateTime = currentTime()
   const newLog = await visitorLog.findOneAndUpdate({"log_id": newdata.log_id},{$set : {CheckOut_Time: dateTime}}) //update the checkout time
-    if (newLog.value == null) { //check if log exist
-      return 
+  console.log(newLog)
+    if (newLog) { //check if log exist
+      return (newLog) 
     } else {
-        return (newLog)
+        return 
     }  
 }
 
@@ -1051,7 +1047,7 @@ async function qrCreate(data){
 
 //find visitor logs
 async function findLog(newdata){
-  const match = await visitorLog.find(newdata, {projection: {"_id":0}}).toArray() //find logs
+  const match = await visitorLog.find({"log_id" : newdata.log_id}, {projection: {"_id":0}}).toArray() //find logs
   if (match.length != 0){   //check if there is any log
     return (match) 
   } else{
