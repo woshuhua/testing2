@@ -111,7 +111,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 //login POST request
 app.post('/login', async (req, res) => {
     let data = req.body
-    console.log(req.body)
     let result = await login(data);
     const loginuser = result.verify
     const token = result.token
@@ -166,8 +165,6 @@ app.post('/login', async (req, res) => {
 app.get('/finduser/:user_id', verifyToken, async (req, res)=>{
   let authorize = req.user.role //reading the token for authorisation
   let data = req.params //requesting the data from body
-  console.log(data)
-  console.log(authorize)
   //checking the role of user
   if (authorize == "resident"|| authorize == "security"){
     res.send(errorMessage() + "\nyou do not have access to finding users!")
@@ -183,6 +180,66 @@ app.get('/finduser/:user_id', verifyToken, async (req, res)=>{
       res.send(errorMessage() + "Token not valid!")
     }
   })
+
+
+/**
+ * @swagger
+ * /findallvisitor:
+ *   get:
+ *     tags:
+ *       - Visitor
+ *     summary: Find all visitors
+ *     description: Retrieve a list of all visitors. Only admin users have access to this information.
+ *     security:
+ *       - BearerAuth: []  
+ *     responses:
+ *       200:
+ *         description: Successful response. List of all visitors.
+ *         content:
+ *           application/json:
+ *             example:
+ *               - ref_num: "visitor_reference_number_1"
+ *                 name: "Visitor Name 1"
+ *                 IC_num: "IC123456"
+ *                 car_num: "ABC123"
+ *                 hp_num: "+987654321"
+ *                 pass: true
+ *                 category: "Guest"
+ *                 visit_date: "2023-12-31"
+ *                 unit: "A101"
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       403:
+ *         description: Forbidden. Only admin users have access to this information.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
+
+  //find all visitor GET request
+app.get('/findallvisitor', verifyToken, async (req, res)=>{
+  let authorize = req.user.role //reading the token for authorisation
+  let data = req.params //requesting the data from body
+  //checking the role of user
+  if (authorize == "resident"|| authorize == "security"){
+    res.send(errorMessage() + "\nyou do not have access to finding All visitors!")
+  }else if (authorize == "admin"){
+    const newUser = await findAllVisitor() //calling the function to find user
+    if (newUser){ //checking if user exist
+      res.send(newUser)
+    }else{
+      res.send(errorMessage() + "User does not exist sadly :[")
+    }
+  //token does not exist
+  }else {
+      res.send(errorMessage() + "Token not valid!")
+    }
+  })
+
+  async function findAllVisitor() {
+    //verify if there is duplicate username in databse
+    const match = await visitor.find().toArray()
+    return (match)
+  }
 
 /**
  * @swagger
@@ -453,7 +510,6 @@ app.post('/registervisitor', verifyToken, async (req, res)=>{
 app.get('/findvisitor/:ref_num', verifyToken, async (req, res)=>{
   let authorize = req.user//reading the token for authorisation
   let data = req.params //requesting the data from body
-  console.log(data)
   //checking the role of user
   if (authorize.role){
     const result = await findVisitor(data,authorize) //find visitor
@@ -595,8 +651,6 @@ app.patch('/updatevisitor', verifyToken, async (req, res)=>{
 app.delete('/deletevisitor', verifyToken, async (req, res)=>{
   let data = req.body
   let authorize = req.user
-  console.log(data)
-  console.log(authorize)
   //checking if token is valid
   if(authorize.role){
   const deletedV = await deleteVisitor(data,authorize) //delete visitor
@@ -661,7 +715,6 @@ app.delete('/deletevisitor', verifyToken, async (req, res)=>{
 app.get('/createQRvisitor/:IC_num', verifyToken, async (req, res)=>{
   let data = req.params
   let authorize = req.user
-  console.log(data)
   if (authorize.role){ //checking if token is valid
   const uri = await qrCreate(data) //create qr code
     if (uri){
@@ -879,8 +932,6 @@ async function login(data) {
   console.log("Alert! Alert! Someone is logging in!") //Display message to ensure function is called
   //Verify username is in the database
   let verify = await user.find({user_id : data.user_id}).next();
-  console.log(data.user_id)
-  console.log(verify)
   if (verify){
     //verify password is correct
     const correctPassword = await bcrypt.compare(data.password,verify.password);
@@ -1025,7 +1076,6 @@ async function updateLog(newdata) {
   //verify if username is already in databse
   let dateTime = currentTime()
   const newLog = await visitorLog.findOneAndUpdate({"log_id": newdata.log_id},{$set : {CheckOut_Time: dateTime}}) //update the checkout time
-  console.log(newLog)
     if (newLog) { //check if log exist
       return (newLog) 
     } else {
