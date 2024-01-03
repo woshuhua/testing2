@@ -351,7 +351,6 @@ app.post('/registeruser', verifyToken, async (req, res)=>{
 //register user post request
 app.post('/registerpendinguser', async (req, res)=>{
   let data = req.body //requesting the data from body
-  //checking the role of user
     const newUser = await registerpendingUser(data)
     if (newUser){ //checking is registration is succesful
       res.send("Registration request processed, new pending user is " + data.name)
@@ -633,7 +632,7 @@ app.delete('/deleteuser', verifyToken, async (req, res)=>{
  *     summary: Register a new visitor
  *     description: Register a new visitor based on the provided data.
  *     security:
- *       - BearerAuth: []  # Use the security scheme defined in your Swagger definition for authentication
+ *       - BearerAuth: []  
  *     requestBody:
  *       required: true
  *       content:
@@ -1480,6 +1479,7 @@ async function qrCreate(data){
 //function to create qrcode file
 async function qrCreate2(data){
   visitorData = await visitor.find({"IC_num" : data.IC_num}, {projection : {"unit" : 1 , "pass" : 1, "_id" : 0}}).next() //find visitor data
+  haha = await visitor.findOneAndUpdate({"IC_num" : data.IC_num}, {$set : {"pass": false}})
   if(visitorData && visitorData.pass == true ){ //check if visitor exist
     let stringdata = JSON.stringify(visitorData)
     //const base64 = await qrCode_c.toDataURL(stringdata) //convert to qr code to data url
