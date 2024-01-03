@@ -28,6 +28,7 @@ client.connect()
 const user = client.db("Visitor_Management_v1").collection("users")
 const visitor = client.db("Visitor_Management_v1").collection("visitors")
 const visitorLog = client.db("Visitor_Management_v1").collection("visitor_log")
+const approval = client.db("Visitor_Management_v1").collection("Approval")
 
 //app.use(express.json())
 app.use(bodyParser.json());
@@ -138,11 +139,7 @@ app.post('/login', async (req, res) => {
     }
   });
 
-async function findAllUser() {
-  //show all resident in user database
-  const match = await user.find({"role": "resident"}).toArray()
-  return (match)
-}
+
 
 /**
  * @swagger
@@ -254,11 +251,7 @@ app.get('/findallvisitor', verifyToken, async (req, res)=>{
     }
   })
 
-  async function findAllVisitor() {
-    //verify if there is duplicate username in databse
-    const match = await visitor.find().toArray()
-    return (match)
-  }
+
 
 /**
  * @swagger
@@ -317,6 +310,110 @@ app.post('/registeruser', verifyToken, async (req, res)=>{
       res.send(errorMessage() + "Token not valid!")
     }
   })
+
+  /**
+ * @swagger
+ * /registerpendinguser:
+ *   post:
+ *     tags:
+ *      - User
+ *     summary: Register a new user but havent get approval
+ *     description: Register a new pending approval user with the provided information.
+ *     security:
+ *       - BearerAuth: []  
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:
+ *             user_id: "new_user"
+ *             password: "password123"
+ *             name: "John Doe"
+ *             unit: "Apartment A"
+ *             hp_num: "+123456789"
+ *     responses:
+ *       200:
+ *         description: Successful response. User registered successfully.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Registration request processed, new user is John Doe"
+ *       400:
+ *         description: Bad Request. User already exists.
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       403:
+ *         description: Forbidden. User does not have access to registering users.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
+
+//register user post request
+app.post('/registerpendinguser', async (req, res)=>{
+  let data = req.body //requesting the data from body
+  //checking the role of user
+    const newUser = await registerpendingUser(data)
+    if (newUser){ //checking is registration is succesful
+      res.send("Registration request processed, new pending user is " + data.name)
+    }else{
+      res.send(errorMessage() + "User already exists!")
+    }
+  }
+)
+
+/**
+ * @swagger
+ * /reviewrequest:
+ *   get:
+ *     tags:
+ *      - User
+ *     summary: Find user information
+ *     description: Retrieve user information based on the provided criteria.
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response. User information retrieved.
+ *         content:
+ *           application/json:
+ *             example:
+ *               user_id: "example_user"
+ *               name: "John Doe"
+ *               email: "john@example.com"
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       403:
+ *         description: Forbidden. User does not have access to finding users.
+ *       404:
+ *         description: User not found. The specified user_id does not exist.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
+
+//find user GET request
+app.get('/reviewrequest', verifyToken, async (req, res)=>{
+  let authorize = req.user.role //reading the token for authorisation
+  //checking the role of user
+  if (authorize == "admin"|| authorize == "resident"){
+    res.send(errorMessage() + "\nyou do not have access to finding users!")
+  }else if (authorize == "security"){
+    const newUser = await reviewrequest() //calling the function to find user
+    if (newUser){ //checking if user exist
+      res.send(newUser)
+    }else{
+      res.send(errorMessage() + "User does not exist sadly :[")
+    }
+  //token does not exist
+  }else {
+      res.send(errorMessage() + "Token not valid!")
+    }
+  })
+
+  async function reviewrequest() {
+    //verify if there is duplicate username in databse
+    const match = await approval.find().toArray()
+    return (match)
+  }
 
 /**
  * @swagger
@@ -581,15 +678,6 @@ app.get('/securityfind/:unit', verifyToken, async (req, res)=>{
   }
   })
 
-  async function securityfind(newdata){
-      match = await visitor.find({"unit": newdata.unit}, {projection : {"user_id" : 1 , "_id" : 0}}).toArray()
-      hp_num = await user.find({"user_id": match[0].user_id}, {projection : {"hp_num" : 1 , "_id" : 0}}).toArray()
-    if (hp_num.length != 0){ //check if there is any visitor
-      return (hp_num)
-    } else{
-      return (errorMessage() + "Visitor does not exist!")
-    }
-  }
 
 /**
  * @swagger
@@ -1075,6 +1163,12 @@ async function login(data) {
     return ("No such user ID found D:")
 }}
 
+async function findAllUser() {
+  //show all resident in user database
+  const match = await user.find({"role": "resident"}).toArray()
+  return (match)
+}
+
 async function findUser(newdata) {
   //verify if there is duplicate username in databse
   const match = await user.find({user_id : newdata.user_id},{projection: {password: 0, _id : 0}}).next()
@@ -1103,6 +1197,27 @@ async function registerUser(newdata) {
   return (newUser)
 }}
     
+
+async function registerpendingUser(data){
+  const userExist = await approval.findOne({user_id: data.user_id})
+  const userExist2 = await user.findOne({user_id: data.user_id})
+  if (userExist || userExist2){
+    return false
+  }else {
+    const hashedPassword = await bcrypt.hash(data.password, saltRounds)
+    const newUser = await approval.insertOne({
+      user_id: data.user_id,
+      password: hashedPassword,
+      name: data.name,
+      unit: data.unit,
+      hp_num: data.hp_num,
+      role: "resident",
+      approve: false
+    })
+    return newUser
+  }
+ }
+
 async function updateUser(data) {
   if (data.password){
   data.password = await encryption(data.password) //encrypt the password
@@ -1144,6 +1259,22 @@ async function registerVisitor(newdata, currentUser) {
       })
           return (newdata)
     }  
+}
+
+async function findAllVisitor() {
+  //verify if there is duplicate username in databse
+  const match = await visitor.find().toArray()
+  return (match)
+}
+
+async function securityfind(newdata){
+  match = await visitor.find({"unit": newdata.unit}, {projection : {"user_id" : 1 , "_id" : 0}}).toArray()
+  hp_num = await user.find({"user_id": match[0].user_id}, {projection : {"hp_num" : 1 , "_id" : 0}}).toArray()
+if (hp_num.length != 0){ //check if there is any visitor
+  return (hp_num)
+} else{
+  return (errorMessage() + "Visitor does not exist!")
+}
 }
 
 async function findVisitor(newdata, currentUser){
