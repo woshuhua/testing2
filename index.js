@@ -409,11 +409,109 @@ app.get('/reviewrequest', verifyToken, async (req, res)=>{
     }
   })
 
-  async function reviewrequest() {
-    //verify if there is duplicate username in databse
-    const match = await approval.find().toArray()
-    return (match)
-  }
+/**
+ * @swagger
+ * /updateapproval/{user_id}:
+ *   get:
+ *     tags:
+ *      - User
+ *     summary: Find user information
+ *     description: Retrieve user information based on the provided criteria.
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *      - in: path  
+ *        name: user_id
+ *        schema:
+ *         type: string 
+ *        required: true
+ *        description: User ID of the user to be retrieved
+ *     responses:
+ *       200:
+ *         description: Successful response. User information retrieved.
+ *         content:
+ *           application/json:
+ *             example:
+ *               user_id: "example_user"
+ *               name: "John Doe"
+ *               email: "john@example.com"
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       403:
+ *         description: Forbidden. User does not have access to finding users.
+ *       404:
+ *         description: User not found. The specified user_id does not exist.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
+
+//update approval GET request
+app.get('/updateapproval/:user_id', verifyToken, async (req, res)=>{
+  let authorize = req.user.role //reading the token for authorisation
+  let data = req.params //requesting the data from body
+  //checking the role of user
+  if (authorize == "resident"|| authorize == "admin"){
+    res.send(errorMessage() + "\nyou do not have access to finding users!")
+  }else if (authorize == "security"){
+    const newUser = await updaterequest(data) //calling the function to find user
+    if (newUser){ //checking if user exist
+      res.send("Registration request successful, new user is " + newUser.name)
+    }else{
+      res.send(errorMessage() + "User does not exist sadly :[")
+    }
+  //token does not exist
+  }else {
+      res.send(errorMessage() + "Token not valid!")
+    }
+  })
+
+/**
+ * @swagger
+ * /noapprovalcreate:
+ *   post:
+ *     tags:
+ *      - User
+ *     summary: Register a new user
+ *     description: Register a new user with the provided information.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:
+ *             user_id: "new_user"
+ *             password: "password123"
+ *             name: "John Doe"
+ *             unit: "Apartment A"
+ *             hp_num: "+123456789"
+ *             role: "admin"
+ *     responses:
+ *       200:
+ *         description: Successful response. User registered successfully.
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Registration request processed, new user is John Doe"
+ *       400:
+ *         description: Bad Request. User already exists.
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       403:
+ *         description: Forbidden. User does not have access to registering users.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
+
+//register user post request
+app.post('/noapprovalcreate', async (req, res)=>{
+    let data = req.body //requesting the data from body
+    const newUser = await registerUser(data)
+    if (newUser){ //checking is registration is succesful
+      res.send("Registration request processed, new user is " + newUser.name)
+    }else{
+      res.send(errorMessage() + "User already exists!")
+    }
+  })
+
 
 /**
  * @swagger
@@ -1193,7 +1291,6 @@ async function registerUser(newdata) {
         "role" : newdata.role
       })
   const newUser=await user.find({user_id : newdata.user_id}).next()
-  console.log(newUser)
   return (newUser)
 }}
     
@@ -1218,12 +1315,36 @@ async function registerpendingUser(data){
   }
  }
 
+ async function reviewrequest() {
+  //verify if there is duplicate username in databse
+  const match = await approval.find().toArray()
+  return (match)
+}
+
+async function updaterequest(data) {
+  result1 = await approval.findOne({user_id : data.user_id})
+  result = await approval.findOneAndUpdate({user_id : data.user_id},{$set : {"approve":true}}, {new: true})
+  approved = await user.insertOne({
+    user_id : result.user_id,
+    password : result.password,
+    name : result.name,
+    unit : result.unit,
+    hp_num : result.hp_num,
+    role : result.role
+  })
+  deleteapproval = await approval.deleteOne({user_id : data.user_id})
+  if(result == null){ //check if user exist
+    return 
+  }else{
+    return (result)
+  }
+}
+
 async function updateUser(data) {
   if (data.password){
   data.password = await encryption(data.password) //encrypt the password
   }
   result1 = await user.findOne({user_id : data.user_id})
-  console.log(result1)
   result = await user.findOneAndUpdate({user_id : data.user_id},{$set : data}, {new: true})
   if(result == null){ //check if user exist
     return 
