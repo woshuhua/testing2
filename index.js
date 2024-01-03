@@ -639,7 +639,7 @@ app.delete('/deleteuser', verifyToken, async (req, res)=>{
  *       content:
  *         application/json:
  *           example:
- *             ref: "visitor_reference_number"
+ *             ref_num: "visitor_reference_number"
  *             name: "Visitor Name"
  *             IC_num: "IC123456"
  *             car_num: "ABC123"
@@ -1361,13 +1361,13 @@ async function deleteUser(data) {
 
 async function registerVisitor(newdata, currentUser) {
   //verify if there is duplciate ref_num
-  const match = await visitor.find({"ref_num": newdata.ref}).next()
+  const match = await visitor.find({"ref_num": newdata.ref_num}).next()
     if (match) {
       return 
     } else {
       // add info into database
       await visitor.insertOne({
-        "ref_num" : newdata.ref,
+        "ref_num" : newdata.ref_num,
         "name": newdata.name,
         "IC_num": newdata.IC_num,
         "car_num": newdata.car_num,
