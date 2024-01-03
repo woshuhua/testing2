@@ -116,14 +116,33 @@ app.post('/login', async (req, res) => {
     const token = result.token
     //check the returned result if its a object, only then can we welcome the user
     if (typeof loginuser == "object") { 
-      res.write(loginuser.user_id + " has logged in!")
-      res.write("\nWelcome "+ loginuser.name + "!")
-      res.end("\nYour token : " + token)
-    }else {
+      if(loginuser.role == "admin"){
+        const allUser = await findAllUser()
+        res.json({
+          message: "Login successful! Welcome Admin "+ loginuser.user_id,
+          token: token,
+          user: loginuser.role,
+          HostStoredInDatabase: allUser
+        });
+      }else if(loginuser.role == "security" || loginuser.role == "resident"){
+          res.json({
+            message: "Login successful!",
+            token: token,
+            user: loginuser.role,
+          });
+        }
+      }
+    else {
       //else send the failure message
       res.send(errorMessage() + result)
     }
   });
+
+async function findAllUser() {
+  //show all resident in user database
+  const match = await user.find({"role": "resident"}).toArray()
+  return (match)
+}
 
 /**
  * @swagger
@@ -415,7 +434,7 @@ app.delete('/deleteuser', verifyToken, async (req, res)=>{
  * /registervisitor:
  *   post:
  *     tags:
- *      - Visitor
+ *       - Visitor
  *     summary: Register a new visitor
  *     description: Register a new visitor based on the provided data.
  *     security:
@@ -430,7 +449,7 @@ app.delete('/deleteuser', verifyToken, async (req, res)=>{
  *             IC_num: "IC123456"
  *             car_num: "ABC123"
  *             hp_num: "+987654321"
- *             pass: true
+ *             pass: true  
  *             category: "Guest"
  *             date: "2023-12-31"
  *             unit: "A101"
@@ -521,6 +540,59 @@ app.get('/findvisitor/:ref_num', verifyToken, async (req, res)=>{
 
 /**
  * @swagger
+ * /securityfind/{unit}:
+ *   get:
+ *     tags:
+ *      - Visitor
+ *     summary: Find hp_num based on unit of resident
+ *     description: Only security can find the hp_num of the resident.
+ *     security:
+ *       - BearerAuth: []  
+ *     parameters:
+ *       - in: path
+ *         name: unit
+ *         description: Unit of the resident that the visitor is visiting
+ *         schema:
+ *           type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Successful response. List of visitors matching the reference number.
+ *         content:
+ *           application/json:
+ *             example:
+ *               - hp_num: "+987654321"
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
+
+//find visitor GET request
+app.get('/securityfind/:unit', verifyToken, async (req, res)=>{
+  let authorize = req.user//reading the token for authorisation
+  let data = req.params //requesting the data from body
+  //checking the role of user
+  if (authorize.role == "security"){
+    const result = await securityfind(data) //find visitor
+    res.send(result)
+  }else{
+    res.send(errorMessage() + "Not an authorized role!") 
+  }
+  })
+
+  async function securityfind(newdata){
+      match = await visitor.find({"unit": newdata.unit}, {projection : {"user_id" : 1 , "_id" : 0}}).toArray()
+      hp_num = await user.find({"user_id": match[0].user_id}, {projection : {"hp_num" : 1 , "_id" : 0}}).toArray()
+    if (hp_num.length != 0){ //check if there is any visitor
+      return (hp_num)
+    } else{
+      return (errorMessage() + "Visitor does not exist!")
+    }
+  }
+
+/**
+ * @swagger
  * /updatevisitor:
  *   patch:
  *     tags:
@@ -558,7 +630,7 @@ app.get('/findvisitor/:ref_num', verifyToken, async (req, res)=>{
  *                 description: Updated phone number of the visitor
  *                 example: +987654321
  *               pass:
- *                 type: string
+ *                 type: boolean
  *                 description: Updated pass status of the visitor
  *                 example: true
  *               category:
@@ -725,6 +797,64 @@ app.get('/createQRvisitor/:IC_num', verifyToken, async (req, res)=>{
     }
   }else {
       res.send(errorMessage() + "Not a valid token!")
+    }
+  }
+)
+
+/**
+ * @swagger
+ * /retrievepass/{IC_num}:
+ *   get:
+ *     tags:
+ *       - Visitor
+ *     summary: Create QR code for visitor
+ *     description: |
+ *       Create a QR code for a visitor based on their IC number.
+ *       The QR code contains visitor information such as reference number, name, category, and contact number.
+ *     parameters:
+ *       - in: path
+ *         name: IC_num
+ *         description: IC Number of the visitor
+ *         schema:
+ *           type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: QR code created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Success message
+ *                 qrCodeUrl:
+ *                   type: string
+ *                   format: uri
+ *                   description: URL to the generated QR code
+ *       400:
+ *         description: Invalid request or visitor not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ */
+
+//create a qr code for visitor
+app.get('/retrievepass/:IC_num', async (req, res)=>{
+  let data = req.params
+  const uri = await qrCreate2(data) //create qr code
+    if (uri){
+    //res.write("QR code created for visitor! \n");
+    res.setHeader('Content-Type', 'image/png');
+    res.end(uri, 'binary');
+    }else{
+      res.send(errorMessage() + "No such visitor found or pass status is false.")
     }
   }
 )
@@ -1085,10 +1215,23 @@ async function updateLog(newdata) {
 
 //function to create qrcode file
 async function qrCreate(data){
-  visitorData = await visitor.find({"IC_num" : data.IC_num}, {projection : {"ref_num" : 1 , "name" : 1 , "category" : 1 , "hp" : 1, "_id" : 0}}).next() //find visitor data
-  if(visitorData){ //check if visitor exist
+  visitorData = await visitor.find({"IC_num" : data.IC_num}, {projection : {"unit" : 1 , "pass" : 1, "_id" : 0}}).next() //find visitor data
+  if(visitorData && visitorData.pass == true ){ //check if visitor exist
     let stringdata = JSON.stringify(visitorData)
     const base64 = await qrCode_c.toDataURL(stringdata) //convert to qr code to data url
+    return (base64)
+  }else{
+    return
+  }
+}
+
+//function to create qrcode file
+async function qrCreate2(data){
+  visitorData = await visitor.find({"IC_num" : data.IC_num}, {projection : {"unit" : 1 , "pass" : 1, "_id" : 0}}).next() //find visitor data
+  if(visitorData && visitorData.pass == true ){ //check if visitor exist
+    let stringdata = JSON.stringify(visitorData)
+    //const base64 = await qrCode_c.toDataURL(stringdata) //convert to qr code to data url
+    const base64 = await qrCode_c.toBuffer(stringdata, {type: 'png'})
     return (base64)
   }else{
     return
