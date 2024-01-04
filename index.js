@@ -319,8 +319,6 @@ app.post('/registeruser', verifyToken, async (req, res)=>{
  *      - User
  *     summary: Register a new user but havent get approval
  *     description: Register a new pending approval user with the provided information.
- *     security:
- *       - BearerAuth: []  
  *     requestBody:
  *       required: true
  *       content:
