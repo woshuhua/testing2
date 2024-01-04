@@ -723,7 +723,7 @@ app.get('/findvisitor/:ref_num', verifyToken, async (req, res)=>{
   let data = req.params //requesting the data from body
   //checking the role of user
   if (authorize.role){
-    const result = await findVisitor(data,authorize) //find visitor
+    const result = await findAllVisitor(data,authorize) //find visitor
     res.send(result)
   }else{
     res.send(errorMessage() + "Not a valid token!") 
