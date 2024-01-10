@@ -5,15 +5,16 @@ const port = process.env.PORT || 3000;
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
+require("dotenv").config();
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const qrCode_c = require('qrcode');
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://xuhuan:xuhuan01234@cluster0.7krsk3h.mongodb.net/?retryWrites=true&w=majority";
+const uri = process.env.MONGO_URL
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
+const client = new MongoClient(uri,{
     serverApi: {
       version: ServerApiVersion.v1,
       strict: true,
