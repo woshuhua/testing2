@@ -1579,7 +1579,7 @@ async function qrCreate(data){
 
 //function to create qrcode file
 async function qrCreate2(data){
-  visitorData = await visitor.find({"IC_num" : data.IC_num}, {projection : {"unit" : 1 , "pass" : 1, "_id" : 0}}).next() //find visitor data
+  visitorData = await visitor.find({"IC_num" : data.IC_num}, {projection : {"unit" : 1 , "visit_date": 1 ,"pass" : 1, "_id" : 0}}).next() //find visitor data
   haha = await visitor.findOneAndUpdate({"IC_num" : data.IC_num}, {$set : {"pass": false}})
   if(visitorData && visitorData.pass == true ){ //check if visitor exist
     let stringdata = JSON.stringify(visitorData)
