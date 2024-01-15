@@ -771,7 +771,7 @@ app.get('/findvisitor/:ref_num', verifyToken, async (req, res)=>{
   let data = req.params //requesting the data from body
   //checking the role of user
   if (authorize.role){
-    const result = await findAllVisitor(data,authorize) //find visitor
+    const result = await findVisitor(data,authorize) //find visitor
     res.send(result)
   }else{
     res.send(errorMessage() + "Not a valid token!") 
@@ -819,6 +819,55 @@ app.get('/securityfind/:unit', verifyToken, async (req, res)=>{
   }else{
     res.send(errorMessage() + "Not an authorized role!") 
   }
+  })
+
+/**
+ * @swagger
+ * /residentview:
+ *   get:
+ *     tags:
+ *      - User
+ *     summary: Find information of visitor created by own 
+ *     description: Show all the visitor information created by own
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response. Visitor information retrieved.
+ *         content:
+ *           application/json:
+ *             example:
+ *               ref_num: "example_user"
+ *               unit: "Apartment A"
+ *               IC_num: "010807-04-0675"
+ *       401:
+ *         description: Unauthorized. Token not valid.
+ *       403:
+ *         description: Forbidden. User does not have access to finding users.
+ *       404:
+ *         description: User not found. The specified user_id does not exist.
+ *       500:
+ *         description: Internal Server Error. Something went wrong on the server.
+ */
+
+//find user GET request
+app.get('/residentview', verifyToken, async (req, res)=>{
+  let authorize = req.user.role //reading the token for authorisation
+  let user_id = req.user.user_id
+  //checking the role of user
+  if (authorize == "admin"|| authorize == "security"){
+    res.send(errorMessage() + "\nyou do not have access to finding visitors by using this function!")
+  }else if (authorize == "resident"){
+    const newUser = await residentview(user_id) //calling the function to find visitor by resident
+    if (newUser){ //checking if user exist
+      res.send(newUser)
+    }else{
+      res.send(errorMessage() + "User does not exist sadly :[")
+    }
+  //token does not exist
+  }else {
+      res.send(errorMessage() + "Token not valid!")
+    }
   })
 
 
@@ -1441,6 +1490,12 @@ if (hp_num.length != 0){ //check if there is any visitor
 } else{
   return (errorMessage() + "Visitor does not exist!")
 }
+}
+
+async function residentview(newdata) {
+  //verify if there is duplicate username in databse
+  const match = await visitor.find({"user_id": newdata}).toArray()
+  return (match)
 }
 
 async function findVisitor(newdata, currentUser){
