@@ -17,6 +17,7 @@
     "express-rate-limit": "^7.1.5",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.3.0",
+    "password-validator": "^5.3.0",
     "qrcode": "^1.5.3",
     "qrcode-generator": "^1.4.4",
     "swagger-jsdoc": "^6.2.8",

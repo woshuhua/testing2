@@ -5,6 +5,7 @@ const port = process.env.PORT || 3000;
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const rateLimit = require('express-rate-limit');
+var passwordValidator = require('password-validator');
 
 require("dotenv").config();
 const bodyParser = require('body-parser');
@@ -74,6 +75,20 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+//Password validator setup
+// Create a schema
+var schema = new passwordValidator();
+
+// Add properties to it
+schema
+.is().min(8)                                    // Minimum length 8
+.is().max(100)                                  // Maximum length 100
+.has().uppercase()                              // Must have uppercase letters
+.has().lowercase()                              // Must have lowercase letters
+.has().digits(2)                                // Must have at least 2 digits
+.has().not().spaces()                           // Should not have spaces
+.is().not().oneOf(['Passw0rd', 'Password123']); // Blacklist these values
 
 
 /**
@@ -356,6 +371,19 @@ app.post('/registeruser', verifyToken, async (req, res)=>{
 //register user post request
 app.post('/registerpendinguser', async (req, res)=>{
   let data = req.body //requesting the data from body
+  // Validate the password with details
+
+  //To print error when the password does not meet the requirement
+  const errorcheck = schema.validate(data.password, { details: true });
+
+  //To pass the boolean value true when the password is valid
+  const validationResult = schema.validate(data.password,);
+  if (validationResult !== true) {
+    // Password does not meet the criteria
+    const errors = errorcheck.map(error => error.message);
+    return res.status(400).send("Invalid password. " + errors.join(', '));
+  }
+
     const newUser = await registerpendingUser(data)
     if (newUser){ //checking is registration is succesful
       res.send("Registration request processed, new pending user is " + data.name)
@@ -507,7 +535,20 @@ app.get('/updateapproval/:user_id', verifyToken, async (req, res)=>{
 
 //register user post request
 app.post('/noapprovalcreate', async (req, res)=>{
-    let data = req.body //requesting the data from body
+  let data = req.body //requesting the data from body
+
+  // Validate the password with details
+  //To print error when the password does not meet the requirement
+  const errorcheck = schema.validate(data.password, { details: true });
+
+  //To pass the boolean value when the password is valid or not
+  const validationResult = schema.validate(data.password,);
+  if (validationResult !== true) {
+    // Password does not meet the criteria
+    const errors = errorcheck.map(error => error.message);
+    return res.status(400).send("Invalid password. " + errors.join(', '));
+  }
+
     const newUser = await registerUser(data)
     if (newUser){ //checking is registration is succesful
       res.send("Registration request processed, new user is " + newUser.name)
