@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 3000;
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const rateLimit = require('express-rate-limit');
 
 require("dotenv").config();
 const bodyParser = require('body-parser');
@@ -12,6 +13,11 @@ const saltRounds = 10;
 const qrCode_c = require('qrcode');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = process.env.MONGO_URL
+const loginRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 3, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri,{
@@ -111,7 +117,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  */
 
 //login POST request
-app.post('/login', async (req, res) => {
+app.post('/login', loginRateLimiter, async (req, res) => {
     let data = req.body
     let result = await login(data);
     const loginuser = result.verify
@@ -123,14 +129,14 @@ app.post('/login', async (req, res) => {
         res.json({
           message: "Login successful! Welcome Admin "+ loginuser.user_id,
           token: token,
-          user: loginuser.role,
+          role: loginuser.role,
           HostStoredInDatabase: allUser
         });
       }else if(loginuser.role == "security" || loginuser.role == "resident"){
           res.json({
-            message: "Login successful!",
+            message: "Login successful! Welcome "+ loginuser.role + loginuser.user_id,
             token: token,
-            user: loginuser.role,
+            role: loginuser.role,
           });
         }
       }
