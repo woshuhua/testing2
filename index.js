@@ -37,6 +37,7 @@ const user = client.db("Visitor_Management_v1").collection("users")
 const visitor = client.db("Visitor_Management_v1").collection("visitors")
 const visitorLog = client.db("Visitor_Management_v1").collection("visitor_log")
 const approval = client.db("Visitor_Management_v1").collection("Approval")
+const blacklist = client.db("Visitor_Management_v1").collection("BlacklistToken")
 
 //app.use(express.json())
 app.use(bodyParser.json());
@@ -826,7 +827,7 @@ app.get('/securityfind/:unit', verifyToken, async (req, res)=>{
  * /residentview:
  *   get:
  *     tags:
- *      - User
+ *      - Visitor
  *     summary: Find information of visitor created by own 
  *     description: Show all the visitor information created by own
  *     security:
@@ -1337,6 +1338,41 @@ app.patch('/checkOut', verifyToken, async (req, res)=>{
     }
   })
 
+/**
+ * @swagger
+ * /logout:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Logout user and revoke token
+ *     description: |
+ *       Logs out the user and revokes the provided JWT token.
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Logged out successfully"
+ *       401:
+ *         description: Unauthorized - Invalid or expired token
+ *       500:
+ *         description: Internal Server Error
+ */
+
+  app.post('/logout', async (req, res)=>{
+    const token = req.headers.authorization.split(' ')[1];
+    const result = await logout(token);
+    res.send("Logged out successfully");
+  })
+
+
+async function logout(token) {
+    const result = await blacklist.insertOne({"token": token});
+    return result;
+}
 
 async function login(data) {
   console.log("Alert! Alert! Someone is logging in!") //Display message to ensure function is called
@@ -1609,23 +1645,35 @@ function currentTime(){
 
 //generate token for login authentication
 function generateToken(loginProfile){
-  return jwt.sign(loginProfile, 'UltimateSuperMegaTitanicBombasticGreatestBestPOGMadSuperiorTheOneandOnlySensationalSecretPassword', { expiresIn: '1h' });
+  return jwt.sign(loginProfile, 'UltimateSuperMegaTitanicBombasticGreatestBestPOGMadSuperiorTheOneandOnlySensationalSecretPassword0x138hd924791dAAA', { expiresIn: '1h' });
 }
 
-//verify generated tokens
-function verifyToken(req, res, next){
-  let header = req.headers.authorization
-  let token = header.split(' ')[1] //checking header
-  jwt.verify(token,'UltimateSuperMegaTitanicBombasticGreatestBestPOGMadSuperiorTheOneandOnlySensationalSecretPassword',function(err,decoded){
-    if(err) {
-      res.send(errorMessage() + "Token is not valid D:, go to the counter to exchange (joke)")
-      return
-    }
-    req.user = decoded // bar
+// verify generated tokens
+async function verifyToken(req, res, next) {
+  let header = req.headers.authorization;
+  let token = header.split(' ')[1]; // checking header
 
-    next()
+  if (!token) {
+    res.status(401).send(errorMessage() + "Token is missing in Authorization header. Please log in.");
+    return;
+  }
+
+  const result = await blacklist.findOne({"token": token})
+  console.log(result)
+  if (result){
+    res.status(401).send(errorMessage() + "Token is blacklisted. Please log in again!!!");
+    return;
+  }
+  jwt.verify(token, 'UltimateSuperMegaTitanicBombasticGreatestBestPOGMadSuperiorTheOneandOnlySensationalSecretPassword0x138hd924791dAAA', function (err, decoded) {
+    if (err) {
+      res.status(401).send(errorMessage() + "Token is not valid D:, go to the counter to exchange (joke)");
+      return;
+    }
+    req.user = decoded; // Set the decoded user information in the request object
+    next(); // Proceed to the next middleware or route handler
   });
 }
+
 
 //bcrypt functions to generate a hashed password
 async function encryption(data){
