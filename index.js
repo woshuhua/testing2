@@ -6,6 +6,8 @@ const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const rateLimit = require('express-rate-limit');
 var passwordValidator = require('password-validator');
+const Validator = require('validatorjs');
+
 
 require("dotenv").config();
 const bodyParser = require('body-parser');
@@ -372,8 +374,25 @@ app.post('/registeruser', verifyToken, async (req, res)=>{
 //register user post request
 app.post('/registerpendinguser', async (req, res)=>{
   let data = req.body //requesting the data from body
-  // Validate the password with details
 
+  // Define the validation rules
+  let rules = {
+    "user_id": "required|string|max:20",
+    "name": "required|string|max:50",
+    "unit": "required|string|max:15",
+    "hp_num": "required|string|max:12",
+  };
+
+  // Create a new validator instance
+  let validation = new Validator(data, rules);
+
+  // If validation fails, return the error messages
+  if(validation.fails()){
+    let errors = validation.errors.all();
+    return res.status(400).json(errors);
+  }
+
+  // Validate the password with details
   //To print error when the password does not meet the requirement
   const errorcheck = schema.validate(data.password, { details: true });
 
@@ -537,6 +556,23 @@ app.get('/updateapproval/:user_id', verifyToken, async (req, res)=>{
 //register user post request
 app.post('/noapprovalcreate', async (req, res)=>{
   let data = req.body //requesting the data from body
+
+    // Define the validation rules
+    let rules = {
+      "user_id": "required|string|max:20",
+      "name": "required|string|max:50",
+      "unit": "required|string|max:15",
+      "hp_num": "required|string|max:12",
+    };
+  
+    // Create a new validator instance
+    let validation = new Validator(data, rules);
+  
+    // If validation fails, return the error messages
+    if(validation.fails()){
+      let errors = validation.errors.all();
+      return res.status(400).json(errors);
+    }
 
   // Validate the password with details
   //To print error when the password does not meet the requirement
@@ -714,6 +750,28 @@ app.post('/registervisitor', verifyToken, async (req, res)=>{
   let authorize = req.user.role
   let loginUser = req.user.user_id
   let data = req.body
+
+    // Define the validation rules
+    let rules = {
+      "ref_num": "required|string|max:10",
+      "name": "required|string|max:50",
+      "IC_num": "required|string|max:16",
+      "car_num": "required|string|max:10",
+      "hp_num": "required|string|max:13",
+      "pass": "required|boolean",
+      "category": "required|string|max:20",
+      "date": "required|string|max:10",
+      "unit": "required|string|max:20",
+    };
+  
+    // Create a new validator instance
+    let validation = new Validator(data, rules);
+  
+    // If validation fails, return the error messages
+    if(validation.fails()){
+      let errors = validation.errors.all();
+      return res.status(400).json(errors);
+    }
   //checking if token is valid
   if(authorize){
   const visitorData = await registerVisitor(data, loginUser) //register visitor
@@ -1519,9 +1577,12 @@ async function findAllVisitor() {
 }
 
 async function securityfind(newdata){
+  //validate the input before it is entered into the database
+  body.isString('unit', 'Unit must be a string').isLength({max: 10}).trim().escape()
+  //verify if there is duplicate username in databse
   match = await visitor.find({"unit": newdata.unit}, {projection : {"user_id" : 1 , "_id" : 0}}).toArray()
   hp_num = await user.find({"user_id": match[0].user_id}, {projection : {"hp_num" : 1 , "_id" : 0}}).toArray()
-if (hp_num.length != 0){ //check if there is any visitor
+if (hp_num.length != 0){ //check if there is any hp_num from the user
   return (hp_num)
 } else{
   return (errorMessage() + "Visitor does not exist!")
@@ -1645,7 +1706,12 @@ function currentTime(){
 
 //generate token for login authentication
 function generateToken(loginProfile){
-  return jwt.sign(loginProfile, 'UltimateSuperMegaTitanicBombasticGreatestBestPOGMadSuperiorTheOneandOnlySensationalSecretPassword0x138hd924791dAAA', { expiresIn: '1h' });
+  return jwt.sign(
+    {"user_id": loginProfile.user_id, 
+    "role": loginProfile.role},
+    'UltimateSuperMegaTitanicBombasticGreatestBestPOGMadSuperiorTheOneandOnlySensationalSecretPassword0x138hd924791dAAA',
+    { expiresIn: '1h' }
+  );
 }
 
 // verify generated tokens
@@ -1659,7 +1725,6 @@ async function verifyToken(req, res, next) {
   }
 
   const result = await blacklist.findOne({"token": token})
-  console.log(result)
   if (result){
     res.status(401).send(errorMessage() + "Token is blacklisted. Please log in again!!!");
     return;
