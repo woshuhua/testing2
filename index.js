@@ -1709,7 +1709,7 @@ function generateToken(loginProfile){
   return jwt.sign(
     {"user_id": loginProfile.user_id, 
     "role": loginProfile.role},
-    'UltimateSuperMegaTitanicBombasticGreatestBestPOGMadSuperiorTheOneandOnlySensationalSecretPassword0x138hd924791dAAA',
+    process.env.SECRET_KEY,
     { expiresIn: '1h' }
   );
 }
@@ -1729,7 +1729,7 @@ async function verifyToken(req, res, next) {
     res.status(401).send(errorMessage() + "Token is blacklisted. Please log in again!!!");
     return;
   }
-  jwt.verify(token, 'UltimateSuperMegaTitanicBombasticGreatestBestPOGMadSuperiorTheOneandOnlySensationalSecretPassword0x138hd924791dAAA', function (err, decoded) {
+  jwt.verify(token, process.env.SECRET_KEY, function (err, decoded) {
     if (err) {
       res.status(401).send(errorMessage() + "Token is not valid D:, go to the counter to exchange (joke)");
       return;
